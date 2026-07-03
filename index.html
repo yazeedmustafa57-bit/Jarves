@@ -10,16 +10,16 @@
   html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 
   /* Fullscreen canvas */
-  #orb-container{
+  #brain-container{
     position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;
-    display:flex;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at center,#0a1628 0%,#05080f 70%);
     overflow:hidden
   }
+  #brain-container canvas{display:block;width:100%!important;height:100%!important}
 
-  /* Background grid lines (holographic) */
+  /* Background grid lines */
   #bg-grid{
-    position:absolute;inset:0;
+    position:absolute;inset:0;z-index:0;pointer-events:none;
     background-image:linear-gradient(rgba(0,153,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,153,255,0.03) 1px,transparent 1px);
     background-size:40px 40px;
     perspective:600px;
@@ -28,13 +28,12 @@
     opacity:0.5
   }
 
-  /* Scan line overlay */
+  /* Scan line */
   #scan-line{
-    position:absolute;left:0;width:100%;height:2px;
+    position:absolute;left:0;width:100%;height:2px;z-index:1;pointer-events:none;
     background:linear-gradient(90deg,transparent,var(--cyan),transparent);
     opacity:0.3;
-    animation:scanMove 4s linear infinite;
-    z-index:1;pointer-events:none
+    animation:scanMove 4s linear infinite
   }
   @keyframes scanMove{
     0%{top:0;opacity:0}
@@ -44,158 +43,27 @@
     100%{top:100%;opacity:0}
   }
 
-  /* Orb */
-  .orb{
-    width:min(65vw,65vh,380px);height:min(65vw,65vh,380px);
-    border-radius:50%;position:relative;
-    animation:orbFloat 6s ease-in-out infinite;
-    z-index:2
-  }
-  @keyframes orbFloat{
-    0%,100%{transform:translateY(0)}
-    50%{transform:translateY(-10px)}
-  }
-
-  /* Orb glow aura */
-  .orb-aura{
-    position:absolute;inset:-30%;border-radius:50%;
-    background:radial-gradient(circle,rgba(0,153,255,0.12) 0%,transparent 70%);
-    animation:auraPulse 3s ease-in-out infinite alternate
-  }
-  @keyframes auraPulse{
-    0%{opacity:0.6;transform:scale(1)}
-    100%{opacity:1;transform:scale(1.05)}
-  }
-
-  /* Orb outer glow */
-  .orb-glow{
-    position:absolute;inset:-15%;border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,rgba(0,153,255,0.25) 0%,transparent 60%);
-    animation:glowPulse 4s ease-in-out infinite alternate
-  }
-  @keyframes glowPulse{
-    0%{opacity:0.7}
-    100%{opacity:1}
-  }
-
-  /* Orb core */
-  .orb-core{
-    position:absolute;inset:8%;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%,#33aaff,#0066cc 40%,#002266 70%,#000d22 100%);
-    box-shadow:0 0 40px rgba(0,153,255,0.3),0 0 80px rgba(0,153,255,0.1),inset 0 0 60px rgba(0,200,255,0.15);
-    animation:corePulse 4s ease-in-out infinite;
-    z-index:2
-  }
-  @keyframes corePulse{
-    0%,100%{box-shadow:0 0 40px rgba(0,153,255,0.3),0 0 80px rgba(0,153,255,0.1),inset 0 0 60px rgba(0,200,255,0.15)}
-    50%{box-shadow:0 0 60px rgba(0,153,255,0.4),0 0 120px rgba(0,153,255,0.15),inset 0 0 80px rgba(0,200,255,0.25)}
-  }
-
-  /* Orb inner brightness */
-  .orb-inner{
-    position:absolute;inset:15%;border-radius:50%;
-    background:radial-gradient(circle at 40% 35%,rgba(255,255,255,0.3) 0%,transparent 60%);
-    z-index:3;pointer-events:none
-  }
-
-  /* Rings */
-  .orb-ring{
-    position:absolute;border-radius:50%;
-    border:1.5px solid rgba(0,153,255,0.12);z-index:1;pointer-events:none
-  }
-  .orb-ring:nth-child(2){inset:-8%;animation:ringSpin 25s linear infinite}
-  .orb-ring:nth-child(3){inset:-16%;animation:ringSpin 35s linear infinite reverse;border-color:rgba(0,153,255,0.08)}
-  .orb-ring:nth-child(4){inset:-24%;animation:ringSpin 45s linear infinite;border:1px dashed rgba(0,153,255,0.06)}
-  .orb-ring:nth-child(5){inset:-32%;animation:ringSpin 55s linear infinite reverse;border-color:rgba(0,153,255,0.04)}
-  @keyframes ringSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-
-  /* Holographic data rings */
-  .data-ring{
-    position:absolute;border-radius:50%;z-index:1;pointer-events:none;
-    border:1px solid rgba(0,221,255,0.06)
-  }
-  .data-ring:nth-child(6){inset:-3%;animation:dataRing1 8s ease-in-out infinite;border-color:rgba(0,221,255,0.08)}
-  .data-ring:nth-child(7){inset:-10%;animation:dataRing2 12s ease-in-out infinite;border-color:rgba(0,221,255,0.05)}
-  @keyframes dataRing1{
-    0%,100%{transform:rotate(0deg) scaleX(1);border-color:rgba(0,221,255,0.08)}
-    50%{transform:rotate(180deg) scaleX(0.7);border-color:rgba(0,221,255,0.03)}
-  }
-  @keyframes dataRing2{
-    0%,100%{transform:rotate(45deg) scaleX(0.8);border-color:rgba(0,221,255,0.05)}
-    50%{transform:rotate(225deg) scaleX(1.2);border-color:rgba(0,221,255,0.08)}
-  }
-
-  /* Orb state colors */
-  .orb.listening .orb-core{
-    background:radial-gradient(circle at 35% 30%,#22dd88,#00aa55 40%,#004422 70%,#001a0a 100%);
-    box-shadow:0 0 50px rgba(0,204,136,0.3),0 0 100px rgba(0,204,136,0.1),inset 0 0 60px rgba(0,255,136,0.15)
-  }
-  .orb.listening .orb-aura{background:radial-gradient(circle,rgba(0,204,136,0.15) 0%,transparent 70%)}
-  .orb.listening .orb-ring{border-color:rgba(0,204,136,0.15)}
-  .orb.listening .orb-inner{background:radial-gradient(circle at 40% 35%,rgba(100,255,180,0.25) 0%,transparent 60%)}
-
-  .orb.processing .orb-core{
-    background:radial-gradient(circle at 35% 30%,#ffaa22,#ee6600 40%,#662200 70%,#220a00 100%);
-    box-shadow:0 0 60px rgba(255,136,0,0.35),0 0 120px rgba(255,136,0,0.12),inset 0 0 80px rgba(255,180,0,0.2);
-    animation:coreSpin 0.8s ease-in-out infinite
-  }
-  @keyframes coreSpin{
-    0%,100%{transform:scale(1) rotate(0deg)}
-    25%{transform:scale(0.98) rotate(2deg)}
-    75%{transform:scale(1.02) rotate(-2deg)}
-  }
-  .orb.processing .orb-aura{background:radial-gradient(circle,rgba(255,136,0,0.2) 0%,transparent 70%)}
-  .orb.processing .orb-ring{border-color:rgba(255,136,0,0.15)}
-
-  .orb.responding .orb-core{
-    background:radial-gradient(circle at 35% 30%,#ff66bb,#dd2277 40%,#660033 70%,#220011 100%);
-    box-shadow:0 0 50px rgba(255,68,170,0.3),0 0 100px rgba(255,68,170,0.12),inset 0 0 60px rgba(255,100,200,0.2);
-    animation:respondPulse 0.15s ease-in-out infinite
-  }
-  @keyframes respondPulse{
-    0%,100%{transform:scale(1)}
-    50%{transform:scale(1.02)}
-  }
-  .orb.responding .orb-aura{background:radial-gradient(circle,rgba(255,68,170,0.18) 0%,transparent 70%)}
-  .orb.responding .orb-ring{border-color:rgba(255,68,170,0.15)}
-
-  /* Particles */
-  .particles-container{
-    position:absolute;inset:-50%;border-radius:50%;z-index:1;pointer-events:none
-  }
-  .particle{
-    position:absolute;width:2px;height:2px;background:var(--cyan);
-    border-radius:50%;opacity:0;animation:particleFloat 4s ease-in-out infinite
-  }
-  @keyframes particleFloat{
-    0%{opacity:0;transform:translate(0,0) scale(0)}
-    20%{opacity:0.8}
-    80%{opacity:0.4}
-    100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1)}
-  }
-
-  /* Orb status label */
-  .orb-label{
-    position:absolute;bottom:calc(50% - min(65vw,65vh,380px)/2 - 50px);
-    left:50%;transform:translateX(-50%);
+  /* Status label */
+  .brain-label{
+    position:fixed;bottom:clamp(70px,15vh,120px);left:50%;transform:translateX(-50%);
     text-align:center;z-index:3;pointer-events:none;white-space:nowrap
   }
-  .orb-label .main{
+  .brain-label .main{
     font-size:clamp(11px,2.2vw,16px);letter-spacing:10px;text-transform:uppercase;
     color:var(--cyan);text-shadow:0 0 20px rgba(0,221,255,0.3),0 0 40px rgba(0,221,255,0.1);
     font-weight:300
   }
-  .orb-label .sub{
+  .brain-label .sub{
     font-size:clamp(8px,1.4vw,11px);letter-spacing:4px;color:var(--text-dim);margin-top:6px;
-    font-weight:200;transition:color 0.3s
+    font-weight:200;transition:color 0.5s
   }
 
   /* ─── Chat ─── */
   #chat-container{
     position:fixed;bottom:0;left:0;width:100%;z-index:10;
-    max-height:45vh;overflow-y:auto;overflow-x:hidden;
+    max-height:40vh;overflow-y:auto;overflow-x:hidden;
     background:linear-gradient(transparent,rgba(5,8,15,0.85) 20%,rgba(5,8,15,0.95));
-    padding:50px 16px 90px 16px;
+    padding:50px 16px 80px 16px;
     -webkit-overflow-scrolling:touch
   }
   #chat-container::-webkit-scrollbar{width:3px}
@@ -235,14 +103,13 @@
 
   /* ─── Voice Wave ─── */
   #waveform{
-    position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:11;
-    display:none;align-items:center;gap:2px;height:24px;pointer-events:none
+    position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:11;
+    display:none;align-items:center;gap:2px;height:20px;pointer-events:none
   }
   #waveform.active{display:flex}
   #waveform span{
     width:3px;height:100%;background:var(--cyan);border-radius:2px;
-    animation:waveAnim 0.5s ease-in-out infinite alternate;
-    opacity:0.6
+    animation:waveAnim 0.5s ease-in-out infinite alternate;opacity:0.6
   }
   #waveform span:nth-child(1){animation-delay:0s;height:30%}
   #waveform span:nth-child(2){animation-delay:0.1s;height:60%}
@@ -256,9 +123,9 @@
     100%{transform:scaleY(1)}
   }
 
-  /* ─── Voice Button ─── */
+  /* ─── Mic Button ─── */
   #mic-btn{
-    position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:12;
+    position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:12;
     width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);
     background:rgba(255,255,255,0.06);color:var(--text);
     font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -266,18 +133,9 @@
     transition:all 0.3s;outline:none;-webkit-tap-highlight-color:transparent
   }
   #mic-btn:active{transform:translateX(-50%) scale(0.9)}
-  #mic-btn.listening{
-    border-color:var(--green);background:rgba(0,255,136,0.12);
-    box-shadow:0 0 20px rgba(0,255,136,0.2),0 0 40px rgba(0,255,136,0.1)
-  }
-  #mic-btn.processing{
-    border-color:var(--orange);background:rgba(255,136,0,0.12);
-    box-shadow:0 0 20px rgba(255,136,0,0.2)
-  }
-  #mic-btn.responding{
-    border-color:var(--pink);background:rgba(255,68,170,0.12);
-    box-shadow:0 0 20px rgba(255,68,170,0.2)
-  }
+  #mic-btn.listening{border-color:var(--green);background:rgba(0,255,136,0.12);box-shadow:0 0 20px rgba(0,255,136,0.2)}
+  #mic-btn.processing{border-color:var(--orange);background:rgba(255,136,0,0.12);box-shadow:0 0 20px rgba(255,136,0,0.2)}
+  #mic-btn.responding{border-color:var(--pink);background:rgba(255,68,170,0.12);box-shadow:0 0 20px rgba(255,68,170,0.2)}
 
   /* ─── Start Overlay ─── */
   #start-overlay{
@@ -287,8 +145,6 @@
     cursor:pointer;transition:opacity 0.6s,visibility 0.6s
   }
   #start-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
-  #start-overlay.auto-hide{animation:autoFadeInOut 2.5s ease forwards}
-  @keyframes autoFadeInOut{0%{opacity:1;visibility:visible}60%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden;pointer-events:none}}
   #start-overlay .icon{font-size:clamp(60px,15vw,80px);margin-bottom:20px;opacity:0.8}
   #start-overlay h1{
     font-size:clamp(20px,5vw,36px);font-weight:200;letter-spacing:12px;
@@ -307,54 +163,54 @@
   }
 
   /* ─── HUD Corners ─── */
-  .hud-corner{
-    position:fixed;z-index:5;pointer-events:none;opacity:0.15
-  }
+  .hud-corner{position:fixed;z-index:5;pointer-events:none;opacity:0.15}
   .hud-tl{top:12px;left:12px;border-top:1px solid var(--cyan);border-left:1px solid var(--cyan);width:30px;height:30px}
   .hud-tr{top:12px;right:12px;border-top:1px solid var(--cyan);border-right:1px solid var(--cyan);width:30px;height:30px}
   .hud-bl{bottom:70px;left:12px;border-bottom:1px solid var(--cyan);border-left:1px solid var(--cyan);width:30px;height:30px}
   .hud-br{bottom:70px;right:12px;border-bottom:1px solid var(--cyan);border-right:1px solid var(--cyan);width:30px;height:30px}
+
+  /* Loading */
+  #loading{
+    position:fixed;inset:0;z-index:40;
+    display:flex;align-items:center;justify-content:center;
+    background:#05080f;color:var(--text-dim);
+    font-size:14px;letter-spacing:3px;
+    transition:opacity 0.8s
+  }
+  #loading.hidden{opacity:0;pointer-events:none}
+  #loading .spinner{width:24px;height:24px;border:2px solid rgba(0,221,255,0.1);border-top-color:var(--cyan);border-radius:50%;animation:spin 1s linear infinite;margin-right:12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
+<!-- Loading -->
+<div id="loading"><div class="spinner"></div><span>INITIALISIERE</span></div>
+
 <!-- Start Overlay -->
 <div id="start-overlay">
-  <div class="icon">✦</div>
+  <div class="icon">🧠</div>
   <h1>J.A.R.V.I.S.</h1>
-  <p>Intelligent Systems Interface</p>
+  <p>Neural Interface System</p>
   <div class="tap-hint">▼ ZUM SPRECHEN TIPPEN ▼</div>
 </div>
 
-<!-- HUD Corners -->
+<!-- HUD -->
 <div class="hud-corner hud-tl"></div>
 <div class="hud-corner hud-tr"></div>
 <div class="hud-corner hud-bl"></div>
 <div class="hud-corner hud-br"></div>
 
-<!-- Orb Container -->
-<div id="orb-container">
+<!-- Brain Container -->
+<div id="brain-container">
   <div id="bg-grid"></div>
   <div id="scan-line"></div>
+</div>
 
-  <div class="orb" id="orb">
-    <div class="orb-aura"></div>
-    <div class="orb-glow"></div>
-    <div class="orb-ring"></div>
-    <div class="orb-ring"></div>
-    <div class="orb-ring"></div>
-    <div class="orb-ring"></div>
-    <div class="data-ring"></div>
-    <div class="data-ring"></div>
-    <div class="particles-container" id="particles"></div>
-    <div class="orb-core"></div>
-    <div class="orb-inner"></div>
-  </div>
-
-  <div class="orb-label">
-    <div class="main" id="orb-title">J.A.R.V.I.S.</div>
-    <div class="sub" id="orb-status">BEREIT</div>
-  </div>
+<!-- Status -->
+<div class="brain-label">
+  <div class="main" id="brain-title">J.A.R.V.I.S.</div>
+  <div class="sub" id="brain-status">NEURAL NETZWERK</div>
 </div>
 
 <!-- Chat -->
@@ -369,18 +225,20 @@
 <!-- Mic Button -->
 <button id="mic-btn">🎤</button>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
   'use strict';
 
   // ─── DOM refs ───
-  const orb = document.getElementById('orb');
-  const orbTitle = document.getElementById('orb-title');
-  const orbStatus = document.getElementById('orb-status');
+  const container = document.getElementById('brain-container');
+  const brainTitle = document.getElementById('brain-title');
+  const brainStatus = document.getElementById('brain-status');
   const chat = document.getElementById('chat-container');
   const micBtn = document.getElementById('mic-btn');
   const waveform = document.getElementById('waveform');
   const startOverlay = document.getElementById('start-overlay');
+  const loading = document.getElementById('loading');
 
   let recognition = null;
   let isListening = false;
@@ -391,31 +249,374 @@
   let synth = window.speechSynthesis;
   let lastTranscript = '';
   let transcriptTimeout = null;
+  let currentState = 'idle';
 
-  // ─── Orb State ───
-  function setOrbState(state) {
-    orb.className = 'orb';
-    if (state) orb.classList.add(state);
-    const labels = {listening:'HÖREN',processing:'DENKEN',responding:'SPRECHEN',idle:'BEREIT'};
-    orbStatus.textContent = labels[state] || 'BEREIT';
+  // ─── THREE.JS BRAIN ──────────────────────────────────────────────────────
+
+  let scene, camera, renderer, brainGroup, wireframeBrain;
+  let auraGlow, particles, particleSystem;
+  let targetColor = new THREE.Color(0x0099ff);
+  let currentColor = new THREE.Color(0x0099ff);
+  let targetGlowIntensity = 0.3;
+  let currentGlowIntensity = 0.3;
+  let brainPulse = 0;
+  let mouseX = 0, mouseY = 0;
+  let autoRotateSpeed = 0.003;
+  let clock = new THREE.Clock();
+
+  function hexToThree(hex) {
+    const r = parseInt(hex.slice(1,3),16)/255;
+    const g = parseInt(hex.slice(3,5),16)/255;
+    const b = parseInt(hex.slice(5,7),16)/255;
+    return new THREE.Color(r,g,b);
   }
 
-  // ─── Particles ───
-  function initParticles() {
-    const container = document.getElementById('particles');
-    if (!container) return;
-    for (let i = 0; i < 30; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const angle = (i / 30) * 360;
-      const dist = 40 + Math.random() * 40;
-      const tx = Math.cos(angle * Math.PI / 180) * dist;
-      const ty = Math.sin(angle * Math.PI / 180) * dist;
-      p.style.cssText = `--tx:${tx}px;--ty:${ty}px;left:${50 + Math.random() * 20 - 10}%;top:${50 + Math.random() * 20 - 10}%;animation-delay:${Math.random() * 4}s;animation-duration:${3 + Math.random() * 3}s`;
-      container.appendChild(p);
+  const STATE_COLORS = {
+    idle:    { color: 0x0099ff, glow: 0.25, label: 'BEREIT' },
+    listening:  { color: 0x00ff88, glow: 0.45, label: 'HÖREN' },
+    processing: { color: 0xff6600, glow: 0.60, label: 'DENKEN' },
+    responding: { color: 0xff44aa, glow: 0.50, label: 'SPRECHEN' }
+  };
+
+  function initBrain() {
+    scene = new THREE.Scene();
+    
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+    camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+    camera.position.set(0, 0.3, 3.8);
+    camera.lookAt(0, 0, 0);
+
+    renderer = new THREE.WebGLRenderer({ 
+      alpha: true, 
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    container.insertBefore(renderer.domElement, container.firstChild);
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0x4466aa, 0.4);
+    scene.add(ambient);
+    const dirLight = new THREE.DirectionalLight(0x88bbff, 0.8);
+    dirLight.position.set(1, 2, 3);
+    scene.add(dirLight);
+    const dirLight2 = new THREE.DirectionalLight(0x0088ff, 0.3);
+    dirLight2.position.set(-2, -1, 1);
+    scene.add(dirLight2);
+
+    // ─── Brain Group ───
+    brainGroup = new THREE.Group();
+    scene.add(brainGroup);
+
+    // Create hemispheres
+    function createHemisphere(side, color) {
+      const detail = 36;
+      const geo = new THREE.SphereGeometry(0.9, detail, detail);
+      const pos = geo.attributes.position.array;
+      const norm = geo.attributes.normal.array;
+
+      for (let i = 0; i < pos.length; i += 3) {
+        let x = pos[i], y = pos[i+1], z = pos[i+2];
+        const len = Math.sqrt(x*x + y*y + z*z);
+        
+        // Scale to ellipsoid (brain shape)
+        let sx = 0.85, sy = 0.7, sz = 0.55;
+        let px = x * sx, py = y * sy, pz = z * sz;
+        
+        // Gyri/sulci displacement
+        const angle = Math.atan2(pz, px);
+        const lat = Math.asin(py / Math.sqrt(px*px + py*py + pz*pz));
+        const fold = Math.sin(px * 9 + 1.3) * 0.4 
+                   + Math.cos(py * 7 + 0.7) * 0.3 
+                   + Math.sin(pz * 8 + 2.1) * 0.3
+                   + Math.sin(angle * 5) * 0.2;
+        const d = 0.12 * fold;
+        
+        // Displace along normal
+        const nx = norm[i], ny = norm[i+1], nz = norm[i+2];
+        pos[i] = px + nx * d;
+        pos[i+1] = py + ny * d;
+        pos[i+2] = pz + nz * d;
+        
+        // Shift for left/right
+        pos[i] += side * 0.13;
+      }
+
+      geo.computeVertexNormals();
+      const mat = new THREE.MeshPhongMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.15,
+        shininess: 30,
+        specular: new THREE.Color(0x4488ff),
+        transparent: true,
+        opacity: 0.92,
+        flatShading: false,
+        side: THREE.DoubleSide
+      });
+      return new THREE.Mesh(geo, mat);
     }
+
+    const brainMatColor = 0x1a6bb3;
+    const leftHemi = createHemisphere(-1, brainMatColor);
+    const rightHemi = createHemisphere(1, brainMatColor);
+    brainGroup.add(leftHemi);
+    brainGroup.add(rightHemi);
+
+    // Brain stem
+    const stemGeo = new THREE.CylinderGeometry(0.18, 0.25, 0.4, 12, 8);
+    const stemPos = stemGeo.attributes.position.array;
+    for (let i = 0; i < stemPos.length; i += 3) {
+      stemPos[i] *= 0.8;
+      stemPos[i+1] = stemPos[i+1] * 0.7 - 0.65;
+      stemPos[i+2] *= 0.8;
+    }
+    stemGeo.computeVertexNormals();
+    const stemMat = new THREE.MeshPhongMaterial({
+      color: 0x1a5a99,
+      emissive: 0x1a5a99,
+      emissiveIntensity: 0.1,
+      transparent: true,
+      opacity: 0.7
+    });
+    const stem = new THREE.Mesh(stemGeo, stemMat);
+    brainGroup.add(stem);
+
+    // ─── Wireframe Overlay ───
+    function createWireframeHemisphere(side) {
+      const detail = 24;
+      const geo = new THREE.SphereGeometry(0.93, detail, detail);
+      const pos = geo.attributes.position.array;
+      for (let i = 0; i < pos.length; i += 3) {
+        let x = pos[i], y = pos[i+1], z = pos[i+2];
+        const len = Math.sqrt(x*x + y*y + z*z);
+        let px = x * 0.85, py = y * 0.7, pz = z * 0.55;
+        const fold = Math.sin(px * 9 + 1.3) * 0.4 + Math.cos(py * 7 + 0.7) * 0.3 + Math.sin(pz * 8 + 2.1) * 0.3 + Math.sin(Math.atan2(pz, px) * 5) * 0.2;
+        const nx = x/len, ny = y/len, nz = z/len;
+        pos[i] = px + nx * 0.12 * fold + side * 0.13;
+        pos[i+1] = py + ny * 0.12 * fold;
+        pos[i+2] = pz + nz * 0.12 * fold;
+      }
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0x44ccff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.08
+      });
+      return new THREE.Mesh(geo, wireMat);
+    }
+
+    const wireL = createWireframeHemisphere(-1);
+    const wireR = createWireframeHemisphere(1);
+    brainGroup.add(wireL);
+    brainGroup.add(wireR);
+
+    // Scan ring (holographic ring around brain)
+    const ringGeo = new THREE.TorusGeometry(0.9, 0.008, 8, 64);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x00ddff,
+      transparent: true,
+      opacity: 0.15
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2.5;
+    ring.position.y = -0.85;
+    brainGroup.add(ring);
+
+    const ring2 = new THREE.Mesh(
+      new THREE.TorusGeometry(1.05, 0.005, 8, 64),
+      new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.08 })
+    );
+    ring2.rotation.x = Math.PI / 4;
+    ring2.rotation.z = 0.3;
+    ring2.position.y = 0.1;
+    brainGroup.add(ring2);
+
+    // ─── Glow Aura ───
+    const glowGeo = new THREE.SphereGeometry(1.1, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0x0099ff,
+      transparent: true,
+      opacity: 0.08,
+      side: THREE.BackSide
+    });
+    auraGlow = new THREE.Mesh(glowGeo, glowMat);
+    brainGroup.add(auraGlow);
+
+    // ─── Particles ───
+    const pCount = 200;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(pCount * 3);
+    const pSizes = new Float32Array(pCount);
+    const pSpeeds = new Float32Array(pCount);
+    const pRadii = new Float32Array(pCount);
+    const pAngles = new Float32Array(pCount);
+    const pYOff = new Float32Array(pCount);
+
+    for (let i = 0; i < pCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 1.2 + Math.random() * 1.0;
+      pPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      pPos[i*3+1] = r * Math.cos(phi) * (0.6 + Math.random() * 0.4);
+      pPos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+      pSizes[i] = 0.01 + Math.random() * 0.02;
+      pSpeeds[i] = 0.1 + Math.random() * 0.3;
+      pRadii[i] = r;
+      pAngles[i] = theta;
+      pYOff[i] = (Math.random() - 0.5) * 0.8;
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    pGeo.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
+
+    const pMat = new THREE.PointsMaterial({
+      color: 0x44ccff,
+      size: 0.02,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true
+    });
+    particleSystem = new THREE.Points(pGeo, pMat);
+    brainGroup.add(particleSystem);
+    
+    // Store particle data for animation
+    particleSystem.userData = { speeds: pSpeeds, radii: pRadii, angles: pAngles, yOff: pYOff };
+
+    // Size for responsive
+    const size = Math.min(w, h);
+    const baseScale = Math.min(1, size / 500);
+    brainGroup.scale.set(baseScale, baseScale, baseScale);
+
+    loading.classList.add('hidden');
   }
-  initParticles();
+
+  function animateBrain() {
+    requestAnimationFrame(animateBrain);
+    const delta = clock.getDelta();
+    const elapsed = clock.getElapsedTime();
+
+    // Smooth color transition
+    currentColor.lerp(targetColor, 0.04);
+    currentGlowIntensity += (targetGlowIntensity - currentGlowIntensity) * 0.04;
+
+    // Update brain materials
+    brainGroup.children.forEach(child => {
+      if (child.isMesh && child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => {
+            if (m.emissive) {
+              m.emissive.lerp(targetColor, 0.04);
+              m.emissiveIntensity = 0.08 + currentGlowIntensity * 0.4;
+            }
+            if (m.color && !m.wireframe) {
+              m.color.lerp(targetColor, 0.03);
+            }
+          });
+        } else {
+          if (child.material.emissive) {
+            child.material.emissive.lerp(targetColor, 0.04);
+            child.material.emissiveIntensity = 0.08 + currentGlowIntensity * 0.4;
+          }
+          if (child.material.color && !child.material.wireframe) {
+            child.material.color.lerp(targetColor, 0.03);
+          }
+          if (child.material.wireframe) {
+            child.material.color.lerp(targetColor, 0.04);
+            child.material.opacity = 0.04 + currentGlowIntensity * 0.15;
+          }
+        }
+      }
+    });
+
+    // Glow aura
+    if (auraGlow) {
+      auraGlow.material.color.lerp(targetColor, 0.04);
+      auraGlow.material.opacity = 0.04 + currentGlowIntensity * 0.12;
+      const pulse = 1 + Math.sin(elapsed * 0.8) * 0.03;
+      auraGlow.scale.set(pulse, pulse, pulse);
+    }
+
+    // Brain slow rotation
+    brainGroup.rotation.y += autoRotateSpeed + mouseX * 0.0002;
+    brainGroup.rotation.x += (mouseY * 0.0001 - brainGroup.rotation.x) * 0.01;
+    
+    // Gentle idle bob
+    brainGroup.position.y = Math.sin(elapsed * 0.4) * 0.02;
+
+    // Pulse on processing
+    if (currentState === 'processing') {
+      const pulse = 1 + Math.sin(elapsed * 8) * 0.012;
+      brainGroup.scale.set(baseScale * pulse, baseScale * pulse, baseScale * pulse);
+    } else if (currentState === 'responding') {
+      const pulse = 1 + Math.sin(elapsed * 15) * 0.008;
+      brainGroup.scale.set(baseScale * pulse, baseScale * pulse, baseScale * pulse);
+    }
+
+    // Update particles
+    if (particleSystem) {
+      const pos = particleSystem.geometry.attributes.position.array;
+      const data = particleSystem.userData;
+      for (let i = 0; i < pos.length / 3; i++) {
+        data.angles[i] += delta * data.speeds[i] * 0.2;
+        const r = data.radii[i];
+        const angle = data.angles[i];
+        const yOff = data.yOff[i];
+        pos[i*3] = r * Math.cos(angle + elapsed * 0.05);
+        pos[i*3+1] = Math.sin(elapsed * 0.3 + angle) * 0.3 + yOff * 0.2;
+        pos[i*3+2] = r * Math.sin(angle + elapsed * 0.05);
+      }
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+      
+      particleSystem.material.color.lerp(targetColor, 0.03);
+      particleSystem.material.opacity = 0.2 + currentGlowIntensity * 0.6;
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  function setBrainState(state) {
+    currentState = state;
+    const cfg = STATE_COLORS[state] || STATE_COLORS.idle;
+    targetColor = new THREE.Color(cfg.color);
+    targetGlowIntensity = cfg.glow;
+    brainStatus.textContent = cfg.label;
+    
+    // Update mic button visually
+    micBtn.className = '';
+    if (state === 'listening') micBtn.classList.add('listening');
+    else if (state === 'processing') micBtn.classList.add('processing');
+    else if (state === 'responding') micBtn.classList.add('responding');
+  }
+
+  let baseScale = 1;
+
+  // ─── Resize ───
+  function onResize() {
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    baseScale = Math.min(1, Math.min(w, h) / 500);
+  }
+
+  window.addEventListener('resize', onResize);
+
+  // ─── Mouse/Touch interaction ───
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 0) {
+      mouseX = (e.touches[0].clientX / window.innerWidth - 0.5) * 2;
+      mouseY = (e.touches[0].clientY / window.innerHeight - 0.5) * 2;
+    }
+  }, { passive: true });
 
   // ─── Chat ───
   function addMessage(role, text, isTyping) {
@@ -452,9 +653,9 @@
     utterance.rate = 0.85;
     utterance.pitch = 0.7;
     currentUtterance = utterance;
-    utterance.onstart = () => { setOrbState('responding'); };
-    utterance.onend = () => { setOrbState('listening'); if (callback) callback(); };
-    utterance.onerror = () => { setOrbState('listening'); if (callback) callback(); };
+    utterance.onstart = () => { setBrainState('responding'); };
+    utterance.onend = () => { setBrainState('listening'); if (callback) callback(); };
+    utterance.onerror = () => { setBrainState('listening'); if (callback) callback(); };
     synth.speak(utterance);
   }
 
@@ -476,9 +677,8 @@
   async function processMessage(text) {
     if (isProcessing) return;
     isProcessing = true;
-    // micBtn is visual only
     if (recognition) { try { recognition.stop(); } catch(e){} }
-    setOrbState('processing');
+    setBrainState('processing');
     addMessage('user', text);
     addMessage('jarvis', '', true);
     const reply = await sendToJarvis(text);
@@ -486,8 +686,7 @@
     addMessage('jarvis', reply);
     speak(reply, () => {
       isProcessing = false;
-      
-      setOrbState('listening');
+      setBrainState('listening');
       if (autoRestart && recognition) {
         try { recognition.start(); } catch(e){}
       }
@@ -505,10 +704,9 @@
 
     recognition.onstart = () => {
       isListening = true;
-      
       micBtn.textContent = '🔴';
       waveform.classList.add('active');
-      setOrbState('listening');
+      setBrainState('listening');
     };
 
     recognition.onresult = (event) => {
@@ -521,11 +719,9 @@
           interim = event.results[i][0].transcript;
         }
       }
-
       if (interim) {
-        orbStatus.textContent = interim.length > 20 ? interim.slice(0,20)+'…' : interim;
+        brainStatus.textContent = interim.length > 20 ? interim.slice(0,20)+'…' : interim;
       }
-
       if (finalTranscript && finalTranscript.trim()) {
         lastTranscript = finalTranscript.trim();
         if (transcriptTimeout) clearTimeout(transcriptTimeout);
@@ -543,8 +739,6 @@
       if (event.error === 'not-allowed') {
         addMessage('jarvis', '❌ Mikrofonzugriff verweigert. Bitte Zugriff erlauben.');
         autoRestart = false;
-      } else if (event.error === 'no-speech') {
-        // silent restart
       }
     };
 
@@ -555,14 +749,13 @@
       if (autoRestart && !isProcessing) {
         try { setTimeout(() => recognition.start(), 50); } catch(e) {}
       } else if (!autoRestart) {
-        setOrbState('idle');
+        setBrainState('idle');
       }
     };
   } else {
     micBtn.textContent = '✕';
   }
 
-  // ─── Start listening ───
   function startListening() {
     if (!recognition) return;
     autoRestart = true;
@@ -574,7 +767,7 @@
     if (recognition) { try { recognition.stop(); } catch(e) {} }
   }
 
-  // ─── Activation via user gesture (required for mobile Chrome) ───
+  // ─── Activation ───
   function activateJarvis() {
     document.removeEventListener('touchstart', activateJarvis);
     document.removeEventListener('click', activateJarvis);
@@ -603,9 +796,7 @@
   document.addEventListener('touchstart', activateJarvis, { once: true });
   document.addEventListener('click', activateJarvis, { once: true });
 
-  // ─── Mic Button (nur visuell, kein Klick nötig) ───
-  // Der Button ist nur zur Anzeige - das System hört automatisch zu
-  // Bei Fehlern kann man trotzdem draufdrücken:
+  // ─── Mic Button ───
   micBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (!recognition) return;
@@ -614,12 +805,16 @@
     }
   });
 
+  // ─── Init ───
+  initBrain();
+  animateBrain();
+
   // Wake lock
   if (navigator.wakeLock) {
     navigator.wakeLock.request('screen').then(r => wakeLock = r).catch(() => {});
   }
 
-  console.log('J.A.R.V.I.S. Interface v2.0 geladen');
+  console.log('J.A.R.V.I.S. Neural Interface v3.0 geladen');
 })();
 </script>
 </body>
