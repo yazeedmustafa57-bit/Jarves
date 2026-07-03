@@ -225,6 +225,12 @@
 <!-- Mic Button -->
 <button id="mic-btn">🎤</button>
 
+<!-- Text Input Fallback (versteckt, wird eingeblendet wenn Sprachsteuerung nicht geht) -->
+<div id="text-input-bar" style="display:none;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:12;width:90%;max-width:400px;display:none;align-items:center;gap:8px">
+  <input type="text" id="text-input" placeholder="Nachricht eingeben..." style="flex:1;padding:10px 16px;border-radius:20px;border:1px solid rgba(0,153,255,0.3);background:rgba(10,14,23,0.9);color:#e8ecf1;font-size:16px;outline:none;backdrop-filter:blur(10px)">
+  <button id="text-send-btn" style="width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(0,153,255,0.3);background:rgba(0,153,255,0.15);color:#00ddff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">➤</button>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
@@ -284,7 +290,7 @@
     const w = container.clientWidth || window.innerWidth;
     const h = container.clientHeight || window.innerHeight;
     camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.set(0, 0.3, 3.8);
+    camera.position.set(0, 0.2, 3.2);
     camera.lookAt(0, 0, 0);
 
     renderer = new THREE.WebGLRenderer({ 
@@ -601,7 +607,7 @@
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    baseScale = Math.min(1, Math.min(w, h) / 500);
+    baseScale = Math.min(1.1, Math.min(w, h) / 380);
   }
 
   window.addEventListener('resize', onResize);
@@ -645,8 +651,17 @@
   }
 
   // ─── Speech Synthesis ───
+  let synthReady = false;
+  function initSynth() {
+    if (synth && !synthReady) {
+      // Auf Android Chrome muss getVoices() aufgerufen werden, damit Speak funktioniert
+      synth.getVoices();
+      synthReady = true;
+    }
+  }
   function speak(text, callback) {
-    if (!synth) { if (callback) callback(); return; }
+    if (!synth) { if (callback) setTimeout(callback, 100); return; }
+    initSynth();
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'de-DE';
@@ -656,8 +671,8 @@
     utterance.onstart = () => { setBrainState('responding'); };
     utterance.onend = () => { setBrainState('listening'); if (callback) callback(); };
     utterance.onerror = () => { setBrainState('listening'); if (callback) callback(); };
-    // Fallback: falls speak ohne User-Gesture aufgerufen wird (z.B. bei Antworten)
     try { synth.speak(utterance); } catch(e) { 
+      console.log('Speak error:', e);
       if (callback) setTimeout(callback, 100);
     }
   }
@@ -740,8 +755,15 @@
 
     recognition.onerror = (event) => {
       if (event.error === 'not-allowed') {
-        addMessage('jarvis', '❌ Mikrofonzugriff verweigert. Bitte Zugriff erlauben.');
+        addMessage('jarvis', '❌ Mikrofonzugriff verweigert. Du kannst stattdessen unten tippen.');
         autoRestart = false;
+        setTimeout(showTextFallback, 500);
+      } else if (event.error === 'no-speech') {
+        // Keine Sprache erkannt - das ist normal, einfach weitermachen
+      } else if (event.error === 'aborted') {
+        // Wurde absichtlich gestoppt, ignorieren
+      } else {
+        console.log('Recognition error:', event.error);
       }
     };
 
@@ -775,40 +797,26 @@
     document.removeEventListener('touchstart', activateJarvis);
     document.removeEventListener('click', activateJarvis);
     
-    // Overlay sofort ausblenden
+    // ALLES synchron im User-Gesture - kein setTimeout, kein Promise dazwischen!
     startOverlay.classList.add('hidden');
     
     const welcome = 'Guten Tag, Sir. Ich bin J.A.R.V.I.S. – wie kann ich Ihnen helfen?';
     addMessage('jarvis', welcome);
     
-    // Mikrofon-Permission holen + Erkennung starten (BEIDE im User-Gesture)
-    function doStart() {
-      // Spracherkennung SOFORT starten (User-Gesture ist noch aktiv)
-      if (recognition) {
-        autoRestart = true;
-        try { 
-          recognition.start();
-          // Sprachausgabe erst NACH dem Start der Erkennung
-          setTimeout(() => speak(welcome), 300);
-        } catch(e) {
-          console.log('Recognition error:', e);
-          setTimeout(() => {
-            try { if (recognition.state === 'inactive') recognition.start(); } catch(e2) {}
-          }, 500);
-        }
-      }
+    // 1. Spracherkennung sofort starten (sync im User-Gesture)
+    if (recognition) {
+      autoRestart = true;
+      try { recognition.start(); } catch(e) { console.log('Recognition error:', e); }
     }
     
+    // 2. Sprachausgabe OHNE Verzögerung (braucht auch User-Gesture auf Android!)
+    try { speak(welcome); } catch(e) { console.log('Speak error:', e); }
+    
+    // 3. Permission async anfordern (nur für Stabilität, nicht kritisch)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          // Stream OFFEN halten, damit Permission erhalten bleibt
-          if (!window._jarvisMicStream) window._jarvisMicStream = stream;
-          doStart();
-        })
-        .catch(() => { doStart(); });
-    } else {
-      doStart();
+        .then(stream => { if (!window._jarvisMicStream) window._jarvisMicStream = stream; })
+        .catch(() => {});
     }
   }
   
@@ -824,9 +832,53 @@
     }
   });
 
+  // ─── Text Input Fallback ───
+  const textInputBar = document.getElementById('text-input-bar');
+  const textInput = document.getElementById('text-input');
+  const textSendBtn = document.getElementById('text-send-btn');
+  
+  // Falls SpeechRecognition nicht verfügbar ist, Text-Eingabe einblenden
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    micBtn.style.display = 'none';
+    textInputBar.style.display = 'flex';
+  }
+  
+  function sendTextMessage() {
+    const msg = textInput.value.trim();
+    if (!msg || isProcessing) return;
+    textInput.value = '';
+    processMessage(msg);
+  }
+  
+  if (textSendBtn) {
+    textSendBtn.addEventListener('click', sendTextMessage);
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendTextMessage();
+    });
+  }
+  
+  // Recognition-Fehler: Text-Eingabe als Fallback anbieten
+  // (wird vom onerror handler aufgerufen)
+  function showTextFallback() {
+    if (textInputBar) {
+      textInputBar.style.display = 'flex';
+      micBtn.style.display = 'none';
+      waveform.style.display = 'none';
+    }
+  }
+
   // ─── Init ───
   initBrain();
   animateBrain();
+  
+  // Speech Synthesis vorbereiten (vor dem ersten Tap, damit Stimme geladen ist)
+  if (synth) {
+    synth.getVoices();
+    synthReady = true;
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = () => { synth.getVoices(); };
+    }
+  }
 
   // Wake lock
   if (navigator.wakeLock) {
