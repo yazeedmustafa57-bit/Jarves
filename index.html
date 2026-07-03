@@ -794,7 +794,6 @@
 
   // ─── Activation via user gesture ───
   function activateJarvis() {
-    document.removeEventListener('touchstart', activateJarvis);
     document.removeEventListener('click', activateJarvis);
     
     // ALLES synchron im User-Gesture - kein setTimeout, kein Promise dazwischen!
@@ -820,8 +819,12 @@
     }
   }
   
-  document.addEventListener('touchstart', activateJarvis, { once: true });
   document.addEventListener('click', activateJarvis, { once: true });
+  // Fallback für Touch-Geräte
+  document.addEventListener('touchstart', (e) => {
+    // Nur auslösen wenn nicht bereits durch click aktiviert
+    if (!startOverlay.classList.contains('hidden')) activateJarvis();
+  }, { once: true });
 
   // ─── Mic Button ───
   micBtn.addEventListener('click', (e) => {
