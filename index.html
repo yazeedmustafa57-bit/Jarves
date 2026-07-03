@@ -656,7 +656,10 @@
     utterance.onstart = () => { setBrainState('responding'); };
     utterance.onend = () => { setBrainState('listening'); if (callback) callback(); };
     utterance.onerror = () => { setBrainState('listening'); if (callback) callback(); };
-    synth.speak(utterance);
+    // Fallback: falls speak ohne User-Gesture aufgerufen wird (z.B. bei Antworten)
+    try { synth.speak(utterance); } catch(e) { 
+      if (callback) setTimeout(callback, 100);
+    }
   }
 
   // ─── API ───
@@ -688,7 +691,7 @@
       isProcessing = false;
       setBrainState('listening');
       if (autoRestart && recognition) {
-        try { recognition.start(); } catch(e){}
+        try { if (recognition.state === 'inactive') recognition.start(); } catch(e){}
       }
     });
   }
@@ -767,29 +770,45 @@
     if (recognition) { try { recognition.stop(); } catch(e) {} }
   }
 
-  // ─── Activation ───
+  // ─── Activation via user gesture ───
   function activateJarvis() {
     document.removeEventListener('touchstart', activateJarvis);
     document.removeEventListener('click', activateJarvis);
     
-    function doActivate() {
-      startOverlay.classList.add('hidden');
-      const welcome = 'Guten Tag, Sir. Ich bin J.A.R.V.I.S. – wie kann ich Ihnen helfen?';
-      addMessage('jarvis', welcome);
-      speak(welcome, () => {
-        startListening();
-      });
+    // Overlay sofort ausblenden
+    startOverlay.classList.add('hidden');
+    
+    const welcome = 'Guten Tag, Sir. Ich bin J.A.R.V.I.S. – wie kann ich Ihnen helfen?';
+    addMessage('jarvis', welcome);
+    
+    // Mikrofon-Permission holen + Erkennung starten (BEIDE im User-Gesture)
+    function doStart() {
+      // Spracherkennung SOFORT starten (User-Gesture ist noch aktiv)
+      if (recognition) {
+        autoRestart = true;
+        try { 
+          recognition.start();
+          // Sprachausgabe erst NACH dem Start der Erkennung
+          setTimeout(() => speak(welcome), 300);
+        } catch(e) {
+          console.log('Recognition error:', e);
+          setTimeout(() => {
+            try { if (recognition.state === 'inactive') recognition.start(); } catch(e2) {}
+          }, 500);
+        }
+      }
     }
     
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
-          stream.getTracks().forEach(track => track.stop());
-          doActivate();
+          // Stream OFFEN halten, damit Permission erhalten bleibt
+          if (!window._jarvisMicStream) window._jarvisMicStream = stream;
+          doStart();
         })
-        .catch(() => { doActivate(); });
+        .catch(() => { doStart(); });
     } else {
-      doActivate();
+      doStart();
     }
   }
   
