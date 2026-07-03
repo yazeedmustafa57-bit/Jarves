@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>J.A.R.V.I.S.</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#05080f;--surface:rgba(10,14,23,0.75);--text:#e8ecf1;--text-dim:rgba(255,255,255,0.35);--cyan:#00ddff;--blue:#0099ff;--dark:#001a44;--glow:rgba(0,153,255,0.2);--green:#00ff88;--orange:#ff6600;--pink:#ff44aa}
+  html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+
+  /* Fullscreen canvas */
+  #orb-container{
+    position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,#0a1628 0%,#05080f 70%);
+    overflow:hidden
+  }
+
+  /* Background grid lines (holographic) */
+  #bg-grid{
+    position:absolute;inset:0;
+    background-image:linear-gradient(rgba(0,153,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,153,255,0.03) 1px,transparent 1px);
+    background-size:40px 40px;
+    perspective:600px;
+    transform:rotateX(60deg);
+    transform-origin:center bottom;
+    opacity:0.5
+  }
+
+  /* Scan line overlay */
+  #scan-line{
+    position:absolute;left:0;width:100%;height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    opacity:0.3;
+    animation:scanMove 4s linear infinite;
+    z-index:1;pointer-events:none
+  }
+  @keyframes scanMove{
+    0%{top:0;opacity:0}
+    10%{opacity:0.4}
+    50%{top:100%;opacity:0.1}
+    60%{opacity:0}
+    100%{top:100%;opacity:0}
+  }
+
+  /* Orb */
+  .orb{
+    width:min(65vw,65vh,380px);height:min(65vw,65vh,380px);
+    border-radius:50%;position:relative;
+    animation:orbFloat 6s ease-in-out infinite;
+    z-index:2
+  }
+  @keyframes orbFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+  }
+
+  /* Orb glow aura */
+  .orb-aura{
+    position:absolute;inset:-30%;border-radius:50%;
+    background:radial-gradient(circle,rgba(0,153,255,0.12) 0%,transparent 70%);
+    animation:auraPulse 3s ease-in-out infinite alternate
+  }
+  @keyframes auraPulse{
+    0%{opacity:0.6;transform:scale(1)}
+    100%{opacity:1;transform:scale(1.05)}
+  }
+
+  /* Orb outer glow */
+  .orb-glow{
+    position:absolute;inset:-15%;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,rgba(0,153,255,0.25) 0%,transparent 60%);
+    animation:glowPulse 4s ease-in-out infinite alternate
+  }
+  @keyframes glowPulse{
+    0%{opacity:0.7}
+    100%{opacity:1}
+  }
+
+  /* Orb core */
+  .orb-core{
+    position:absolute;inset:8%;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#33aaff,#0066cc 40%,#002266 70%,#000d22 100%);
+    box-shadow:0 0 40px rgba(0,153,255,0.3),0 0 80px rgba(0,153,255,0.1),inset 0 0 60px rgba(0,200,255,0.15);
+    animation:corePulse 4s ease-in-out infinite;
+    z-index:2
+  }
+  @keyframes corePulse{
+    0%,100%{box-shadow:0 0 40px rgba(0,153,255,0.3),0 0 80px rgba(0,153,255,0.1),inset 0 0 60px rgba(0,200,255,0.15)}
+    50%{box-shadow:0 0 60px rgba(0,153,255,0.4),0 0 120px rgba(0,153,255,0.15),inset 0 0 80px rgba(0,200,255,0.25)}
+  }
+
+  /* Orb inner brightness */
+  .orb-inner{
+    position:absolute;inset:15%;border-radius:50%;
+    background:radial-gradient(circle at 40% 35%,rgba(255,255,255,0.3) 0%,transparent 60%);
+    z-index:3;pointer-events:none
+  }
+
+  /* Rings */
+  .orb-ring{
+    position:absolute;border-radius:50%;
+    border:1.5px solid rgba(0,153,255,0.12);z-index:1;pointer-events:none
+  }
+  .orb-ring:nth-child(2){inset:-8%;animation:ringSpin 25s linear infinite}
+  .orb-ring:nth-child(3){inset:-16%;animation:ringSpin 35s linear infinite reverse;border-color:rgba(0,153,255,0.08)}
+  .orb-ring:nth-child(4){inset:-24%;animation:ringSpin 45s linear infinite;border:1px dashed rgba(0,153,255,0.06)}
+  .orb-ring:nth-child(5){inset:-32%;animation:ringSpin 55s linear infinite reverse;border-color:rgba(0,153,255,0.04)}
+  @keyframes ringSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+  /* Holographic data rings */
+  .data-ring{
+    position:absolute;border-radius:50%;z-index:1;pointer-events:none;
+    border:1px solid rgba(0,221,255,0.06)
+  }
+  .data-ring:nth-child(6){inset:-3%;animation:dataRing1 8s ease-in-out infinite;border-color:rgba(0,221,255,0.08)}
+  .data-ring:nth-child(7){inset:-10%;animation:dataRing2 12s ease-in-out infinite;border-color:rgba(0,221,255,0.05)}
+  @keyframes dataRing1{
+    0%,100%{transform:rotate(0deg) scaleX(1);border-color:rgba(0,221,255,0.08)}
+    50%{transform:rotate(180deg) scaleX(0.7);border-color:rgba(0,221,255,0.03)}
+  }
+  @keyframes dataRing2{
+    0%,100%{transform:rotate(45deg) scaleX(0.8);border-color:rgba(0,221,255,0.05)}
+    50%{transform:rotate(225deg) scaleX(1.2);border-color:rgba(0,221,255,0.08)}
+  }
+
+  /* Orb state colors */
+  .orb.listening .orb-core{
+    background:radial-gradient(circle at 35% 30%,#22dd88,#00aa55 40%,#004422 70%,#001a0a 100%);
+    box-shadow:0 0 50px rgba(0,204,136,0.3),0 0 100px rgba(0,204,136,0.1),inset 0 0 60px rgba(0,255,136,0.15)
+  }
+  .orb.listening .orb-aura{background:radial-gradient(circle,rgba(0,204,136,0.15) 0%,transparent 70%)}
+  .orb.listening .orb-ring{border-color:rgba(0,204,136,0.15)}
+  .orb.listening .orb-inner{background:radial-gradient(circle at 40% 35%,rgba(100,255,180,0.25) 0%,transparent 60%)}
+
+  .orb.processing .orb-core{
+    background:radial-gradient(circle at 35% 30%,#ffaa22,#ee6600 40%,#662200 70%,#220a00 100%);
+    box-shadow:0 0 60px rgba(255,136,0,0.35),0 0 120px rgba(255,136,0,0.12),inset 0 0 80px rgba(255,180,0,0.2);
+    animation:coreSpin 0.8s ease-in-out infinite
+  }
+  @keyframes coreSpin{
+    0%,100%{transform:scale(1) rotate(0deg)}
+    25%{transform:scale(0.98) rotate(2deg)}
+    75%{transform:scale(1.02) rotate(-2deg)}
+  }
+  .orb.processing .orb-aura{background:radial-gradient(circle,rgba(255,136,0,0.2) 0%,transparent 70%)}
+  .orb.processing .orb-ring{border-color:rgba(255,136,0,0.15)}
+
+  .orb.responding .orb-core{
+    background:radial-gradient(circle at 35% 30%,#ff66bb,#dd2277 40%,#660033 70%,#220011 100%);
+    box-shadow:0 0 50px rgba(255,68,170,0.3),0 0 100px rgba(255,68,170,0.12),inset 0 0 60px rgba(255,100,200,0.2);
+    animation:respondPulse 0.15s ease-in-out infinite
+  }
+  @keyframes respondPulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.02)}
+  }
+  .orb.responding .orb-aura{background:radial-gradient(circle,rgba(255,68,170,0.18) 0%,transparent 70%)}
+  .orb.responding .orb-ring{border-color:rgba(255,68,170,0.15)}
+
+  /* Particles */
+  .particles-container{
+    position:absolute;inset:-50%;border-radius:50%;z-index:1;pointer-events:none
+  }
+  .particle{
+    position:absolute;width:2px;height:2px;background:var(--cyan);
+    border-radius:50%;opacity:0;animation:particleFloat 4s ease-in-out infinite
+  }
+  @keyframes particleFloat{
+    0%{opacity:0;transform:translate(0,0) scale(0)}
+    20%{opacity:0.8}
+    80%{opacity:0.4}
+    100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1)}
+  }
+
+  /* Orb status label */
+  .orb-label{
+    position:absolute;bottom:calc(50% - min(65vw,65vh,380px)/2 - 50px);
+    left:50%;transform:translateX(-50%);
+    text-align:center;z-index:3;pointer-events:none;white-space:nowrap
+  }
+  .orb-label .main{
+    font-size:clamp(11px,2.2vw,16px);letter-spacing:10px;text-transform:uppercase;
+    color:var(--cyan);text-shadow:0 0 20px rgba(0,221,255,0.3),0 0 40px rgba(0,221,255,0.1);
+    font-weight:300
+  }
+  .orb-label .sub{
+    font-size:clamp(8px,1.4vw,11px);letter-spacing:4px;color:var(--text-dim);margin-top:6px;
+    font-weight:200;transition:color 0.3s
+  }
+
+  /* ─── Chat ─── */
+  #chat-container{
+    position:fixed;bottom:0;left:0;width:100%;z-index:10;
+    max-height:45vh;overflow-y:auto;overflow-x:hidden;
+    background:linear-gradient(transparent,rgba(5,8,15,0.85) 20%,rgba(5,8,15,0.95));
+    padding:50px 16px 90px 16px;
+    -webkit-overflow-scrolling:touch
+  }
+  #chat-container::-webkit-scrollbar{width:3px}
+  #chat-container::-webkit-scrollbar-track{background:transparent}
+  #chat-container::-webkit-scrollbar-thumb{background:rgba(0,153,255,0.2);border-radius:2px}
+
+  .msg{
+    max-width:88%;margin:6px 0;padding:10px 16px;border-radius:16px;
+    font-size:clamp(14px,3vw,16px);line-height:1.5;
+    animation:msgIn 0.3s ease-out;word-wrap:break-word;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+  }
+  @keyframes msgIn{
+    from{opacity:0;transform:translateY(10px) scale(0.95)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+  .msg.user{
+    background:rgba(0,153,255,0.12);color:var(--text);
+    margin-left:auto;border:1px solid rgba(0,153,255,0.1);
+    border-bottom-right-radius:4px
+  }
+  .msg.jarvis{
+    background:rgba(255,255,255,0.04);color:var(--text);
+    margin-right:auto;border:1px solid rgba(255,255,255,0.06);
+    border-bottom-left-radius:4px
+  }
+  .msg.jarvis .icon{color:var(--cyan);margin-right:6px;display:inline-block}
+  .msg.typing{background:rgba(255,255,255,0.03);color:var(--text-dim);border:none;min-height:24px}
+  .typing-dots{display:inline-flex;gap:3px;align-items:center;height:20px}
+  .typing-dots span{width:5px;height:5px;background:var(--cyan);border-radius:50%;animation:dotPulse 1.4s ease-in-out infinite}
+  .typing-dots span:nth-child(2){animation-delay:0.2s}
+  .typing-dots span:nth-child(3){animation-delay:0.4s}
+  @keyframes dotPulse{
+    0%,60%,100%{opacity:0.3;transform:scale(0.6)}
+    30%{opacity:1;transform:scale(1)}
+  }
+
+  /* ─── Voice Wave ─── */
+  #waveform{
+    position:fixed;bottom:56px;left:50%;transform:translateX(-50%);z-index:11;
+    display:none;align-items:center;gap:2px;height:24px;pointer-events:none
+  }
+  #waveform.active{display:flex}
+  #waveform span{
+    width:3px;height:100%;background:var(--cyan);border-radius:2px;
+    animation:waveAnim 0.5s ease-in-out infinite alternate;
+    opacity:0.6
+  }
+  #waveform span:nth-child(1){animation-delay:0s;height:30%}
+  #waveform span:nth-child(2){animation-delay:0.1s;height:60%}
+  #waveform span:nth-child(3){animation-delay:0.2s;height:90%}
+  #waveform span:nth-child(4){animation-delay:0.3s;height:70%}
+  #waveform span:nth-child(5){animation-delay:0.4s;height:40%}
+  #waveform span:nth-child(6){animation-delay:0.15s;height:100%}
+  #waveform span:nth-child(7){animation-delay:0.25s;height:50%}
+  @keyframes waveAnim{
+    0%{transform:scaleY(0.3)}
+    100%{transform:scaleY(1)}
+  }
+
+  /* ─── Voice Button ─── */
+  #mic-btn{
+    position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:12;
+    width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.06);color:var(--text);
+    font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:all 0.3s;outline:none;-webkit-tap-highlight-color:transparent
+  }
+  #mic-btn:active{transform:translateX(-50%) scale(0.9)}
+  #mic-btn.listening{
+    border-color:var(--green);background:rgba(0,255,136,0.12);
+    box-shadow:0 0 20px rgba(0,255,136,0.2),0 0 40px rgba(0,255,136,0.1)
+  }
+  #mic-btn.processing{
+    border-color:var(--orange);background:rgba(255,136,0,0.12);
+    box-shadow:0 0 20px rgba(255,136,0,0.2)
+  }
+  #mic-btn.responding{
+    border-color:var(--pink);background:rgba(255,68,170,0.12);
+    box-shadow:0 0 20px rgba(255,68,170,0.2)
+  }
+
+  /* ─── Start Overlay ─── */
+  #start-overlay{
+    position:fixed;inset:0;z-index:50;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,#0a1628 0%,#05080f 100%);
+    cursor:pointer;transition:opacity 0.6s,visibility 0.6s
+  }
+  #start-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+  #start-overlay.auto-hide{animation:autoFadeInOut 2.5s ease forwards}
+  @keyframes autoFadeInOut{0%{opacity:1;visibility:visible}60%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden;pointer-events:none}}
+  #start-overlay .icon{font-size:clamp(60px,15vw,80px);margin-bottom:20px;opacity:0.8}
+  #start-overlay h1{
+    font-size:clamp(20px,5vw,36px);font-weight:200;letter-spacing:12px;
+    color:var(--cyan);text-shadow:0 0 40px rgba(0,221,255,0.2);margin-bottom:8px
+  }
+  #start-overlay p{
+    font-size:clamp(13px,2.5vw,16px);color:var(--text-dim);letter-spacing:2px
+  }
+  #start-overlay .tap-hint{
+    margin-top:40px;animation:tapPulse 2s ease-in-out infinite;
+    font-size:clamp(12px,2vw,14px);color:var(--text-dim);letter-spacing:3px
+  }
+  @keyframes tapPulse{
+    0%,100%{opacity:0.3}
+    50%{opacity:0.8}
+  }
+
+  /* ─── HUD Corners ─── */
+  .hud-corner{
+    position:fixed;z-index:5;pointer-events:none;opacity:0.15
+  }
+  .hud-tl{top:12px;left:12px;border-top:1px solid var(--cyan);border-left:1px solid var(--cyan);width:30px;height:30px}
+  .hud-tr{top:12px;right:12px;border-top:1px solid var(--cyan);border-right:1px solid var(--cyan);width:30px;height:30px}
+  .hud-bl{bottom:70px;left:12px;border-bottom:1px solid var(--cyan);border-left:1px solid var(--cyan);width:30px;height:30px}
+  .hud-br{bottom:70px;right:12px;border-bottom:1px solid var(--cyan);border-right:1px solid var(--cyan);width:30px;height:30px}
+</style>
+</head>
+<body>
+
+<!-- Start Overlay -->
+<div id="start-overlay" class="auto-hide">
+  <div class="icon">✦</div>
+  <h1>J.A.R.V.I.S.</h1>
+  <p>Intelligent Systems Interface</p>
+  <div class="tap-hint">▼ J.A.R.V.I.S. AKTIVIERT ▼</div>
+</div>
+
+<!-- HUD Corners -->
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
+
+<!-- Orb Container -->
+<div id="orb-container">
+  <div id="bg-grid"></div>
+  <div id="scan-line"></div>
+
+  <div class="orb" id="orb">
+    <div class="orb-aura"></div>
+    <div class="orb-glow"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring"></div>
+    <div class="data-ring"></div>
+    <div class="data-ring"></div>
+    <div class="particles-container" id="particles"></div>
+    <div class="orb-core"></div>
+    <div class="orb-inner"></div>
+  </div>
+
+  <div class="orb-label">
+    <div class="main" id="orb-title">J.A.R.V.I.S.</div>
+    <div class="sub" id="orb-status">BEREIT</div>
+  </div>
+</div>
+
+<!-- Chat -->
+<div id="chat-container"></div>
+
+<!-- Waveform -->
+<div id="waveform">
+  <span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span>
+</div>
+
+<!-- Mic Button -->
+<button id="mic-btn">🎤</button>
+
+<script>
+(function(){
+  'use strict';
+
+  // ─── DOM refs ───
+  const orb = document.getElementById('orb');
+  const orbTitle = document.getElementById('orb-title');
+  const orbStatus = document.getElementById('orb-status');
+  const chat = document.getElementById('chat-container');
+  const micBtn = document.getElementById('mic-btn');
+  const waveform = document.getElementById('waveform');
+  const startOverlay = document.getElementById('start-overlay');
+
+  let recognition = null;
+  let isListening = false;
+  let isProcessing = false;
+  let autoRestart = true;
+  let currentUtterance = null;
+  let wakeLock = null;
+  let synth = window.speechSynthesis;
+  let lastTranscript = '';
+  let transcriptTimeout = null;
+
+  // ─── Orb State ───
+  function setOrbState(state) {
+    orb.className = 'orb';
+    if (state) orb.classList.add(state);
+    const labels = {listening:'HÖREN',processing:'DENKEN',responding:'SPRECHEN',idle:'BEREIT'};
+    orbStatus.textContent = labels[state] || 'BEREIT';
+  }
+
+  // ─── Particles ───
+  function initParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = (i / 30) * 360;
+      const dist = 40 + Math.random() * 40;
+      const tx = Math.cos(angle * Math.PI / 180) * dist;
+      const ty = Math.sin(angle * Math.PI / 180) * dist;
+      p.style.cssText = `--tx:${tx}px;--ty:${ty}px;left:${50 + Math.random() * 20 - 10}%;top:${50 + Math.random() * 20 - 10}%;animation-delay:${Math.random() * 4}s;animation-duration:${3 + Math.random() * 3}s`;
+      container.appendChild(p);
+    }
+  }
+  initParticles();
+
+  // ─── Chat ───
+  function addMessage(role, text, isTyping) {
+    if (isTyping) {
+      const div = document.createElement('div');
+      div.className = 'msg jarvis typing';
+      div.id = 'typing-msg';
+      div.innerHTML = `<span class="icon">◆</span><div class="typing-dots"><span></span><span></span><span></span></div>`;
+      chat.appendChild(div);
+    } else {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      if (role === 'jarvis') {
+        div.innerHTML = `<span class="icon">◆</span>${text}`;
+      } else {
+        div.textContent = text;
+      }
+      chat.appendChild(div);
+    }
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing-msg');
+    if (el) el.remove();
+  }
+
+  // ─── Speech Synthesis ───
+  function speak(text, callback) {
+    if (!synth) { if (callback) callback(); return; }
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'de-DE';
+    utterance.rate = 0.85;
+    utterance.pitch = 0.7;
+    currentUtterance = utterance;
+    utterance.onstart = () => { setOrbState('responding'); };
+    utterance.onend = () => { setOrbState('listening'); if (callback) callback(); };
+    utterance.onerror = () => { setOrbState('listening'); if (callback) callback(); };
+    synth.speak(utterance);
+  }
+
+  // ─── API ───
+  async function sendToJarvis(text) {
+    try {
+      const res = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:text})
+      });
+      const data = await res.json();
+      return data.response || data.reply || 'Entschuldigung, Sir. Das konnte ich nicht verarbeiten.';
+    } catch(e) {
+      return 'Entschuldigung, Sir. Eine Systemstörung verhindert die Kommunikation.';
+    }
+  }
+
+  // ─── Process ───
+  async function processMessage(text) {
+    if (isProcessing) return;
+    isProcessing = true;
+    // micBtn is visual only
+    if (recognition) { try { recognition.stop(); } catch(e){} }
+    setOrbState('processing');
+    addMessage('user', text);
+    addMessage('jarvis', '', true);
+    const reply = await sendToJarvis(text);
+    removeTyping();
+    addMessage('jarvis', reply);
+    speak(reply, () => {
+      isProcessing = false;
+      
+      setOrbState('listening');
+      if (autoRestart && recognition) {
+        try { recognition.start(); } catch(e){}
+      }
+    });
+  }
+
+  // ─── Speech Recognition ───
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.lang = 'de-DE';
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      isListening = true;
+      
+      micBtn.textContent = '🔴';
+      waveform.classList.add('active');
+      setOrbState('listening');
+    };
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interim = event.results[i][0].transcript;
+        }
+      }
+
+      if (interim) {
+        orbStatus.textContent = interim.length > 20 ? interim.slice(0,20)+'…' : interim;
+      }
+
+      if (finalTranscript && finalTranscript.trim()) {
+        lastTranscript = finalTranscript.trim();
+        if (transcriptTimeout) clearTimeout(transcriptTimeout);
+        transcriptTimeout = setTimeout(() => {
+          if (lastTranscript && lastTranscript.trim()) {
+            const msg = lastTranscript.trim();
+            lastTranscript = '';
+            processMessage(msg);
+          }
+        }, 700);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === 'not-allowed') {
+        addMessage('jarvis', '❌ Mikrofonzugriff verweigert. Bitte Zugriff erlauben.');
+        autoRestart = false;
+      } else if (event.error === 'no-speech') {
+        // silent restart
+      }
+    };
+
+    recognition.onend = () => {
+      micBtn.textContent = '🎤';
+      waveform.classList.remove('active');
+      isListening = false;
+      if (autoRestart && !isProcessing) {
+        try { setTimeout(() => recognition.start(), 50); } catch(e) {}
+      } else if (!autoRestart) {
+        setOrbState('idle');
+      }
+    };
+  } else {
+    micBtn.textContent = '✕';
+  }
+
+  // ─── Start listening ───
+  function startListening() {
+    if (!recognition) return;
+    autoRestart = true;
+    try { recognition.start(); } catch(e) {}
+  }
+
+  function stopListening() {
+    autoRestart = false;
+    if (recognition) { try { recognition.stop(); } catch(e) {} }
+  }
+
+  // ─── Auto-Start ───
+  // Automatischer Start nach dem Laden der Seite
+  setTimeout(() => {
+    startOverlay.classList.add('hidden');
+    const welcome = 'Guten Tag, Sir. Ich bin J.A.R.V.I.S. – wie kann ich Ihnen helfen?';
+    addMessage('jarvis', welcome);
+    speak(welcome, () => {
+      // Automatisch mit dem Zuhören beginnen
+      startListening();
+    });
+  }, 800);
+
+  // ─── Mic Button (nur visuell, kein Klick nötig) ───
+  // Der Button ist nur zur Anzeige - das System hört automatisch zu
+  // Bei Fehlern kann man trotzdem draufdrücken:
+  micBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!recognition) return;
+    if (!isListening && !isProcessing) {
+      startListening();
+    }
+  });
+
+  // Wake lock
+  if (navigator.wakeLock) {
+    navigator.wakeLock.request('screen').then(r => wakeLock = r).catch(() => {});
+  }
+
+  console.log('J.A.R.V.I.S. Interface v2.0 geladen');
+})();
+</script>
+</body>
+</html>

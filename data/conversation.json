@@ -1,0 +1,122 @@
+[
+  {
+    "role": "user",
+    "text": "Ich möchte 500€ verdienen",
+    "intent": "earn",
+    "timestamp": "2026-07-02T21:44:12.481Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Ziel erfasst: 500€ generieren. Ich habe bereits mit der Analyse optimaler Einkommensströme, Marktchancen und Ressourcenallokation begonnen, um dieses Ziel zu erreichen. Soll ich Ihnen die Strategie präsentieren?",
+    "intent": "response",
+    "timestamp": "2026-07-02T21:44:12.481Z"
+  },
+  {
+    "role": "user",
+    "text": "Ich möchte 500€ verdienen",
+    "intent": "earn",
+    "timestamp": "2026-07-02T21:44:58.220Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Ziel erfasst: 500€ generieren. Ich habe bereits mit der Analyse optimaler Einkommensströme, Marktchancen und Ressourcenallokation begonnen, um dieses Ziel zu erreichen. Soll ich Ihnen die Strategie präsentieren?",
+    "intent": "response",
+    "timestamp": "2026-07-02T21:44:58.222Z"
+  },
+  {
+    "role": "user",
+    "text": "hey Wie",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:44:57.241Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 1 aktives Ziel in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:44:57.242Z"
+  },
+  {
+    "role": "user",
+    "text": "hey Wie geht's alles gut",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:44:57.881Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 1 aktives Ziel in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:44:57.882Z"
+  },
+  {
+    "role": "user",
+    "text": "was machst",
+    "intent": "unknown",
+    "timestamp": "2026-07-03T00:45:12.915Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Ich habe Ihre Anfrage verarbeitet und als Ziel registriert: \"Was machst\". Ich werde entsprechende Maßnahmen einleiten.",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:45:12.915Z"
+  },
+  {
+    "role": "user",
+    "text": "was geht ab",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:46:29.233Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 2 aktive Ziele in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:46:29.233Z"
+  },
+  {
+    "role": "user",
+    "text": "guten Morgen",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:46:33.424Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 2 aktive Ziele in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:46:33.425Z"
+  },
+  {
+    "role": "user",
+    "text": "guten Morgen",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:46:36.366Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 2 aktive Ziele in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:46:36.367Z"
+  },
+  {
+    "role": "user",
+    "text": "guten Morgen guten Morgen",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:46:39.185Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 2 aktive Ziele in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:46:39.185Z"
+  },
+  {
+    "role": "user",
+    "text": "guten Morgen guten Morgen",
+    "intent": "greeting",
+    "timestamp": "2026-07-03T00:46:42.137Z"
+  },
+  {
+    "role": "jarvis",
+    "text": "Guten Morgen, Sir. J.A.R.V.I.S. ist online. Sie haben noch 2 aktive Ziele in Bearbeitung. Wie kann ich Ihnen helfen?",
+    "intent": "response",
+    "timestamp": "2026-07-03T00:46:42.137Z"
+  }
+]

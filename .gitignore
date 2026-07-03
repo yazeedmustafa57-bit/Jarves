@@ -1,0 +1,5 @@
+node_modules/
+*.log
+playwright-browsers/
+screenshot*.png
+screenshot*.jpg
