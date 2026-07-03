@@ -31,7 +31,7 @@
   /* Scan line */
   #scan-line{
     position:absolute;left:0;width:100%;height:2px;z-index:1;pointer-events:none;
-    background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+    background:linear-gradient(90deg,transparent,#ff4400,transparent);
     opacity:0.3;
     animation:scanMove 4s linear infinite
   }
@@ -50,7 +50,7 @@
   }
   .brain-label .main{
     font-size:clamp(11px,2.2vw,16px);letter-spacing:10px;text-transform:uppercase;
-    color:var(--cyan);text-shadow:0 0 20px rgba(0,221,255,0.3),0 0 40px rgba(0,221,255,0.1);
+    color:#ff6600;text-shadow:0 0 20px rgba(255,68,0,0.3),0 0 40px rgba(255,68,0,0.1);
     font-weight:300
   }
   .brain-label .sub{
@@ -210,7 +210,20 @@
 <!-- Status -->
 <div class="brain-label">
   <div class="main" id="brain-title">J.A.R.V.I.S.</div>
-  <div class="sub" id="brain-status">NEURAL NETZWERK</div>
+  <div class="sub" id="brain-status">NEURAL NETWORK</div>
+</div>
+
+<!-- API Key Setup -->
+<div id="key-setup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:30;background:rgba(5,8,15,0.95);align-items:center;justify-content:center;flex-direction:column">
+  <div style="text-align:center;padding:20px;max-width:400px;width:90%">
+    <div style="font-size:40px;margin-bottom:15px">🔑</div>
+    <h2 style="color:#00ddff;font-weight:200;letter-spacing:4px;margin-bottom:8px">CLAUDE API KEY</h2>
+    <p style="color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:20px">Gib deinen Anthropic Claude API-Key ein, um J.A.R.V.I.S. zu aktivieren</p>
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." style="width:100%;padding:14px 16px;border-radius:12px;border:1px solid rgba(0,221,255,0.3);background:rgba(10,14,23,0.9);color:#e8ecf1;font-size:16px;outline:none;margin-bottom:12px;text-align:center">
+    <button id="api-key-btn" style="width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#00ddff,#0099ff);color:#05080f;font-size:16px;font-weight:600;cursor:pointer;letter-spacing:2px">J.A.R.V.I.S. AKTIVIEREN</button>
+    <p id="key-error" style="color:#ff4444;font-size:13px;margin-top:10px;display:none"></p>
+    <p style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:16px">Key von <a href="https://console.anthropic.com/" style="color:#00ddff;text-decoration:none">console.anthropic.com</a></p>
+  </div>
 </div>
 
 <!-- Chat -->
@@ -278,10 +291,10 @@
   }
 
   const STATE_COLORS = {
-    idle:    { color: 0x0099ff, glow: 0.25, label: 'BEREIT' },
+    idle:    { color: 0xff5500, glow: 0.30, label: 'BEREIT' },
     listening:  { color: 0x00ff88, glow: 0.45, label: 'HÖREN' },
-    processing: { color: 0xff6600, glow: 0.60, label: 'DENKEN' },
-    responding: { color: 0xff44aa, glow: 0.50, label: 'SPRECHEN' }
+    processing: { color: 0xff2200, glow: 0.60, label: 'DENKEN' },
+    responding: { color: 0xff0088, glow: 0.50, label: 'SPRECHEN' }
   };
 
   function initBrain() {
@@ -290,7 +303,7 @@
     const w = container.clientWidth || window.innerWidth;
     const h = container.clientHeight || window.innerHeight;
     camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.set(0, 0.2, 3.2);
+    camera.position.set(0, 0.2, 3.5);
     camera.lookAt(0, 0, 0);
 
     renderer = new THREE.WebGLRenderer({ 
@@ -303,198 +316,160 @@
     renderer.setClearColor(0x000000, 0);
     container.insertBefore(renderer.domElement, container.firstChild);
 
-    // Lights
-    const ambient = new THREE.AmbientLight(0x4466aa, 0.4);
-    scene.add(ambient);
-    const dirLight = new THREE.DirectionalLight(0x88bbff, 0.8);
-    dirLight.position.set(1, 2, 3);
-    scene.add(dirLight);
-    const dirLight2 = new THREE.DirectionalLight(0x0088ff, 0.3);
-    dirLight2.position.set(-2, -1, 1);
-    scene.add(dirLight2);
-
-    // ─── Brain Group ───
+    // ─── Brain Particle Group ───
     brainGroup = new THREE.Group();
     scene.add(brainGroup);
 
-    // Create hemispheres
-    function createHemisphere(side, color) {
-      const detail = 36;
-      const geo = new THREE.SphereGeometry(0.9, detail, detail);
-      const pos = geo.attributes.position.array;
-      const norm = geo.attributes.normal.array;
-
-      for (let i = 0; i < pos.length; i += 3) {
-        let x = pos[i], y = pos[i+1], z = pos[i+2];
-        const len = Math.sqrt(x*x + y*y + z*z);
+    // Generate brain-shaped particle positions
+    const numParticles = 650;
+    const positions = [];
+    const colors = [];
+    const sizes = [];
+    const origPositions = [];
+    
+    const color1 = new THREE.Color(0xff4400); // Orange
+    const color2 = new THREE.Color(0xff0044); // Rot
+    const color3 = new THREE.Color(0xff8800); // Helles Orange
+    
+    for (let i = 0; i < numParticles; i++) {
+      let x, y, z;
+      let inside = false;
+      let attempts = 0;
+      
+      // Generate points inside a brain-shaped volume
+      while (!inside && attempts < 50) {
+        attempts++;
+        // Random point in ellipsoid (brain shape)
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const r = Math.pow(Math.random(), 0.6) * 1.0;
         
-        // Scale to ellipsoid (brain shape)
-        let sx = 0.85, sy = 0.7, sz = 0.55;
-        let px = x * sx, py = y * sy, pz = z * sz;
+        x = Math.sin(phi) * Math.cos(theta) * r;
+        y = Math.cos(phi) * r * 0.7;
+        z = Math.sin(phi) * Math.sin(theta) * r * 0.6;
         
-        // Gyri/sulci displacement
-        const angle = Math.atan2(pz, px);
-        const lat = Math.asin(py / Math.sqrt(px*px + py*py + pz*pz));
-        const fold = Math.sin(px * 9 + 1.3) * 0.4 
-                   + Math.cos(py * 7 + 0.7) * 0.3 
-                   + Math.sin(pz * 8 + 2.1) * 0.3
-                   + Math.sin(angle * 5) * 0.2;
-        const d = 0.12 * fold;
+        // Brain fold displacement for gyri effect
+        const fold = Math.sin(x * 8 + 1.3) * 0.5 + Math.cos(y * 6 + 0.7) * 0.4 + Math.sin(z * 7 + 2.1) * 0.4;
+        const displacement = 0.1 * fold;
+        const len = Math.sqrt(x*x + y*y + z*z) || 0.001;
+        x += (x / len) * displacement;
+        y += (y / len) * displacement * 0.7;
+        z += (z / len) * displacement * 0.5;
         
-        // Displace along normal
-        const nx = norm[i], ny = norm[i+1], nz = norm[i+2];
-        pos[i] = px + nx * d;
-        pos[i+1] = py + ny * d;
-        pos[i+2] = pz + nz * d;
-        
-        // Shift for left/right
-        pos[i] += side * 0.13;
+        // Split into hemispheres
+        if (Math.random() > 0.5) {
+          x += 0.08;
+          if (x > 0) inside = true;
+        } else {
+          x -= 0.08;
+          if (x < 0) inside = true;
+        }
       }
-
-      geo.computeVertexNormals();
-      const mat = new THREE.MeshPhongMaterial({
-        color: color,
-        emissive: color,
-        emissiveIntensity: 0.15,
-        shininess: 30,
-        specular: new THREE.Color(0x4488ff),
-        transparent: true,
-        opacity: 0.92,
-        flatShading: false,
-        side: THREE.DoubleSide
-      });
-      return new THREE.Mesh(geo, mat);
+      
+      positions.push(x, y, z);
+      origPositions.push(x, y, z);
+      
+      // Color: gradient from orange to red based on position
+      const mix = (y + 0.7) / 1.4;
+      const distFromCenter = Math.sqrt(x*x + y*y + z*z);
+      const c = color1.clone().lerp(color2, mix * 0.6 + 0.2);
+      // Add some brighter particles
+      if (distFromCenter > 0.6) c.lerp(color3, 0.3);
+      colors.push(c.r, c.g, c.b);
+      
+      // Size variation
+      sizes.push(0.02 + Math.random() * 0.03 + (y + 0.7) * 0.01);
     }
 
-    const brainMatColor = 0x1a6bb3;
-    const leftHemi = createHemisphere(-1, brainMatColor);
-    const rightHemi = createHemisphere(1, brainMatColor);
-    brainGroup.add(leftHemi);
-    brainGroup.add(rightHemi);
+    // Particle geometry
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    pGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    pGeo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
 
-    // Brain stem
-    const stemGeo = new THREE.CylinderGeometry(0.18, 0.25, 0.4, 12, 8);
-    const stemPos = stemGeo.attributes.position.array;
-    for (let i = 0; i < stemPos.length; i += 3) {
-      stemPos[i] *= 0.8;
-      stemPos[i+1] = stemPos[i+1] * 0.7 - 0.65;
-      stemPos[i+2] *= 0.8;
-    }
-    stemGeo.computeVertexNormals();
-    const stemMat = new THREE.MeshPhongMaterial({
-      color: 0x1a5a99,
-      emissive: 0x1a5a99,
-      emissiveIntensity: 0.1,
+    const pMat = new THREE.PointsMaterial({
+      size: 0.035,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+      depthWrite: false
     });
-    const stem = new THREE.Mesh(stemGeo, stemMat);
-    brainGroup.add(stem);
+    const particles = new THREE.Points(pGeo, pMat);
+    brainGroup.add(particles);
 
-    // ─── Wireframe Overlay ───
-    function createWireframeHemisphere(side) {
-      const detail = 24;
-      const geo = new THREE.SphereGeometry(0.93, detail, detail);
-      const pos = geo.attributes.position.array;
-      for (let i = 0; i < pos.length; i += 3) {
-        let x = pos[i], y = pos[i+1], z = pos[i+2];
-        const len = Math.sqrt(x*x + y*y + z*z);
-        let px = x * 0.85, py = y * 0.7, pz = z * 0.55;
-        const fold = Math.sin(px * 9 + 1.3) * 0.4 + Math.cos(py * 7 + 0.7) * 0.3 + Math.sin(pz * 8 + 2.1) * 0.3 + Math.sin(Math.atan2(pz, px) * 5) * 0.2;
-        const nx = x/len, ny = y/len, nz = z/len;
-        pos[i] = px + nx * 0.12 * fold + side * 0.13;
-        pos[i+1] = py + ny * 0.12 * fold;
-        pos[i+2] = pz + nz * 0.12 * fold;
+    // Store for animation
+    brainGroup.userData.particles = particles;
+    brainGroup.userData.origPositions = origPositions;
+    brainGroup.userData.pCount = numParticles;
+
+    // ─── Neural Connections ───
+    const pos = pGeo.attributes.position.array;
+    const connPositions = [];
+    const connColors = [];
+    
+    for (let i = 0; i < numParticles; i++) {
+      for (let j = i + 1; j < numParticles; j++) {
+        const dx = pos[i*3] - pos[j*3];
+        const dy = pos[i*3+1] - pos[j*3+1];
+        const dz = pos[i*3+2] - pos[j*3+2];
+        const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        
+        if (dist < 0.25 && Math.random() < 0.15) {
+          connPositions.push(pos[i*3], pos[i*3+1], pos[i*3+2]);
+          connPositions.push(pos[j*3], pos[j*3+1], pos[j*3+2]);
+          
+          const alpha = 1.0 - dist / 0.25;
+          const rCol = 1.0 * alpha;
+          const gCol = 0.3 * alpha;
+          const bCol = 0.1 * alpha;
+          connColors.push(rCol, gCol, bCol, rCol, gCol, bCol);
+        }
       }
-      const wireMat = new THREE.MeshBasicMaterial({
-        color: 0x44ccff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.08
-      });
-      return new THREE.Mesh(geo, wireMat);
     }
 
-    const wireL = createWireframeHemisphere(-1);
-    const wireR = createWireframeHemisphere(1);
-    brainGroup.add(wireL);
-    brainGroup.add(wireR);
+    const connGeo = new THREE.BufferGeometry();
+    connGeo.setAttribute('position', new THREE.Float32BufferAttribute(connPositions, 3));
+    connGeo.setAttribute('color', new THREE.Float32BufferAttribute(connColors, 3));
 
-    // Scan ring (holographic ring around brain)
-    const ringGeo = new THREE.TorusGeometry(0.9, 0.008, 8, 64);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x00ddff,
+    const connMat = new THREE.LineBasicMaterial({
+      vertexColors: true,
       transparent: true,
-      opacity: 0.15
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2.5;
-    ring.position.y = -0.85;
-    brainGroup.add(ring);
+    const connections = new THREE.LineSegments(connGeo, connMat);
+    brainGroup.add(connections);
+    brainGroup.userData.connections = connections;
+    brainGroup.userData.connPos = connPositions;
+    brainGroup.userData.connColors = connColors;
 
-    const ring2 = new THREE.Mesh(
-      new THREE.TorusGeometry(1.05, 0.005, 8, 64),
-      new THREE.MeshBasicMaterial({ color: 0x44aaff, transparent: true, opacity: 0.08 })
-    );
-    ring2.rotation.x = Math.PI / 4;
-    ring2.rotation.z = 0.3;
-    ring2.position.y = 0.1;
-    brainGroup.add(ring2);
-
-    // ─── Glow Aura ───
-    const glowGeo = new THREE.SphereGeometry(1.1, 16, 16);
+    // ─── Glow Core ───
+    const glowGeo = new THREE.SphereGeometry(0.5, 16, 16);
     const glowMat = new THREE.MeshBasicMaterial({
-      color: 0x0099ff,
+      color: 0xff4400,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.06,
       side: THREE.BackSide
     });
     auraGlow = new THREE.Mesh(glowGeo, glowMat);
     brainGroup.add(auraGlow);
 
-    // ─── Particles ───
-    const pCount = 200;
-    const pGeo = new THREE.BufferGeometry();
-    const pPos = new Float32Array(pCount * 3);
-    const pSizes = new Float32Array(pCount);
-    const pSpeeds = new Float32Array(pCount);
-    const pRadii = new Float32Array(pCount);
-    const pAngles = new Float32Array(pCount);
-    const pYOff = new Float32Array(pCount);
-
-    for (let i = 0; i < pCount; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = 1.2 + Math.random() * 1.0;
-      pPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
-      pPos[i*3+1] = r * Math.cos(phi) * (0.6 + Math.random() * 0.4);
-      pPos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
-      pSizes[i] = 0.01 + Math.random() * 0.02;
-      pSpeeds[i] = 0.1 + Math.random() * 0.3;
-      pRadii[i] = r;
-      pAngles[i] = theta;
-      pYOff[i] = (Math.random() - 0.5) * 0.8;
-    }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-    pGeo.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
-
-    const pMat = new THREE.PointsMaterial({
-      color: 0x44ccff,
-      size: 0.02,
+    const glowGeo2 = new THREE.SphereGeometry(0.8, 16, 16);
+    const glowMat2 = new THREE.MeshBasicMaterial({
+      color: 0xff2200,
       transparent: true,
-      opacity: 0.5,
-      blending: THREE.AdditiveBlending,
-      sizeAttenuation: true
+      opacity: 0.03,
+      side: THREE.BackSide
     });
-    particleSystem = new THREE.Points(pGeo, pMat);
-    brainGroup.add(particleSystem);
-    
-    // Store particle data for animation
-    particleSystem.userData = { speeds: pSpeeds, radii: pRadii, angles: pAngles, yOff: pYOff };
+    const auraGlow2 = new THREE.Mesh(glowGeo2, glowMat2);
+    brainGroup.add(auraGlow2);
+    brainGroup.userData.auraGlow2 = auraGlow2;
 
     // Size for responsive
-    const size = Math.min(w, h);
-    const baseScale = Math.min(1, size / 500);
+    baseScale = Math.min(1.1, Math.min(w, h) / 380);
     brainGroup.scale.set(baseScale, baseScale, baseScale);
 
     loading.classList.add('hidden');
